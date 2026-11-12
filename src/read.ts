@@ -93,15 +93,51 @@ function unescapeXml(s: string): string {
   });
 }
 
+/**
+ * 找出 <tag …>…</tag> 或 <tag …/>：用 indexOf 往前走，整份檔只掃一遍。
+ * 不用 [\s\S]*? 這類正規表示式，因為特製的檔案（很多開頭、沒有結尾）會讓它慢到平方倍，拖垮伺服器。
+ * 找不到結尾就停，後面不讀（壞掉的檔）。
+ */
+function elements(src: string, tag: string): { attrs: string; body: string | null }[] {
+  const out: { attrs: string; body: string | null }[] = [];
+  const open = `<${tag}`, close = `</${tag}>`;
+  let pos = 0;
+  for (;;) {
+    const s = src.indexOf(open, pos);
+    if (s < 0) break;
+    const next = src[s + open.length];
+    // 標籤名稱要完整（<c 不能吃到 <col）
+    if (next !== ' ' && next !== '>' && next !== '/' && next !== '\t' && next !== '\n' && next !== '\r') { pos = s + open.length; continue; }
+    const gt = src.indexOf('>', s);
+    if (gt < 0) break;
+    const attrs = src.slice(s + open.length, gt);
+    if (attrs.endsWith('/')) { out.push({ attrs: attrs.slice(0, -1), body: null }); pos = gt + 1; continue; }
+    const end = src.indexOf(close, gt + 1);
+    if (end < 0) break;
+    out.push({ attrs, body: src.slice(gt + 1, end) });
+    pos = end + close.length;
+  }
+  return out;
+}
+
 /** 網銀「匯出 Excel」很多其實是 HTML 表格存成 .xls：取最多列的那個 <table>。 */
 export function readHtmlTable(html: string): Table {
-  const tables = [...html.matchAll(/<table[\s\S]*?<\/table>/gi)].map((m) => m[0]);
+  // 每個 <table> 到它後面第一個 </table>（不分大小寫）；一路往前找，不回頭
+  const tables: string[] = [];
+  const openRe = /<table/gi, closeRe = /<\/table>/gi;
+  for (let m = openRe.exec(html); m; m = openRe.exec(html)) {
+    closeRe.lastIndex = m.index;
+    const c = closeRe.exec(html);
+    if (!c) break;
+    tables.push(html.slice(m.index, c.index + c[0].length));
+    openRe.lastIndex = c.index + c[0].length;
+  }
   let best: Table = [];
   for (const t of tables.length ? tables : [html]) {
     const rows: Table = [];
     for (const tr of t.matchAll(/<tr[\s\S]*?(?=<tr[\s>]|<\/table>|$)/gi)) {
       const cells: string[] = [];
-      for (const td of tr[0].matchAll(/<t([dh])([^>]*)>([\s\S]*?)(?=<t[dh][\s>]|<\/tr>|$)/gi)) {
+      for (const td of tr[0].matchAll(/<t([dh])([^>]{0,500})>([\s\S]*?)(?=<t[dh][\s>]|<\/tr>|$)/gi)) {
         const text = unescapeXml(td[3].replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, ''));
         cells.push(text);
         const span = /colspan\s*=\s*["']?(\d+)/i.exec(td[2]);
@@ -196,34 +232,34 @@ export async function readXlsx(bytes: Uint8Array): Promise<Table> {
   // 第一張工作表：workbook.xml 的第一個 <sheet r:id>，照 rels 找到檔名
   let sheetPath = '';
   const wb = files.get('xl/workbook.xml') ?? '';
-  const rid = /<sheet\b[^>]*\br:id="([^"]+)"/.exec(wb)?.[1];
+  const rid = /<sheet\b[^>]{0,1000}\br:id="([^"]{1,100})"/.exec(wb)?.[1];
   const rels = files.get('xl/_rels/workbook.xml.rels') ?? '';
   if (rid) {
-    const rel = new RegExp(`<Relationship\\b[^>]*Id="${rid}"[^>]*>`).exec(rels)?.[0];
-    const target = rel ? /Target="([^"]+)"/.exec(rel)?.[1] : undefined;
+    // Id 用字串比對，不拿檔案裡的字組正規表示式（檔案可以塞特殊符號讓比對卡死）
+    const rel = elements(rels, 'Relationship').find((r) => /\bId="([^"]*)"/.exec(r.attrs)?.[1] === rid);
+    const target = rel ? /\bTarget="([^"]+)"/.exec(rel.attrs)?.[1] : undefined;
     if (target) sheetPath = target.startsWith('/') ? target.slice(1) : `xl/${target.replace(/^\.\//, '')}`;
   }
   if (!files.has(sheetPath)) sheetPath = [...files.keys()].filter((k) => k.startsWith('xl/worksheets/')).sort()[0] ?? '';
   const sheet = files.get(sheetPath);
   if (!sheet) throw new BankFileError('bank_format', 'Excel 檔裡找不到工作表');
   const shared: string[] = [];
-  for (const si of (files.get('xl/sharedStrings.xml') ?? '').matchAll(/<si>([\s\S]*?)<\/si>/g)) {
-    shared.push(unescapeXml([...si[1].matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map((m) => m[1]).join('')));
-  }
+  const texts = (xml: string) => elements(xml, 't').map((t) => t.body ?? '').join('');
+  for (const si of elements(files.get('xl/sharedStrings.xml') ?? '', 'si')) shared.push(unescapeXml(texts(si.body ?? '')));
   const rows: Table = [];
-  for (const rm of sheet.matchAll(/<row\b([^>]*)>([\s\S]*?)<\/row>/g)) {
+  for (const rm of elements(sheet, 'row')) {
     // Excel 不寫空白列：照 <row r="N"> 補回空列，列號才對得上原檔
-    const rowNo = Number(/\br="(\d+)"/.exec(rm[1])?.[1] ?? rows.length + 1);
+    const rowNo = Number(/\br="(\d+)"/.exec(rm.attrs)?.[1] ?? rows.length + 1);
     while (rows.length < rowNo - 1 && rows.length < BANK_ROWS_MAX + 100) rows.push([]);
     const row: string[] = [];
-    for (const cm of rm[2].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
-      const attrs = cm[1], body = cm[2] ?? '';
+    for (const cm of elements(rm.body ?? '', 'c')) {
+      const attrs = cm.attrs, body = cm.body ?? '';
       const ref = /\br="([A-Z]+\d+)"/.exec(attrs)?.[1];
       const t = /\bt="([^"]+)"/.exec(attrs)?.[1];
       const v = /<v>([\s\S]*?)<\/v>/.exec(body)?.[1];
       let text = '';
       if (t === 's') text = shared[Number(v)] ?? '';
-      else if (t === 'inlineStr') text = unescapeXml([...body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)].map((m) => m[1]).join(''));
+      else if (t === 'inlineStr') text = unescapeXml(texts(body));
       else if (v !== undefined) text = unescapeXml(v);
       const idx = ref ? colIndex(ref) : row.length;
       if (idx >= XLSX_COLS_MAX) continue; // 超過的欄不要（不補空格）

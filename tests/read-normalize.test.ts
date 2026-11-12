@@ -201,3 +201,20 @@ test('玉山 CSV：表頭「提」「存」單字、帳務日＋實際交易日�
   assert.deepEqual(cut.balanceBreaks, [3]);
 });
 
+
+test('安全：特製檔案不會讓讀檔慢到卡死（很多開頭沒有結尾）；工作表編號裡的特殊符號不會被當成比對規則', async () => {
+  const t0 = Date.now();
+  readHtmlTable('<table'.repeat(200_000));
+  readHtmlTable('<table><tr><td' + '<td'.repeat(200_000));
+  assert.ok(Date.now() - t0 < 2000, `HTML 讀了 ${Date.now() - t0} ms`);
+  const t1 = Date.now();
+  const rowsBomb = makeXlsx([], '<worksheet><sheetData>' + '<row r="1"><c r="A1"><v>1</v></c>'.repeat(100_000) + '</sheetData></worksheet>');
+  await readBankTable(rowsBomb).catch(() => null);
+  assert.ok(Date.now() - t1 < 2000, `xlsx 讀了 ${Date.now() - t1} ms`);
+  // r:id 寫成正規表示式特殊字「((((」（舊寫法會丟 SyntaxError 變成程式錯誤）；長度不變，zip 位置才對得上：照樣找到第一張工作表
+  const x = makeXlsx([['日期', '支出'], ['2026/11/01', 5]]);
+  const patched = Buffer.from(x).toString('latin1').replace('r:id="rId1"', 'r:id="(((("').replace('Id="rId1"', 'Id="(((("');
+  const bytes = new Uint8Array(Buffer.from(patched, 'latin1'));
+  const { table } = await readBankTable(bytes);
+  assert.deepEqual(table[0], ['日期', '支出']);
+});
