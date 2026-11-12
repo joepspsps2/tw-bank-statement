@@ -1,0 +1,13 @@
+{
+  "bank": "013",
+  "note": "假資料；欄位照國泰世華「帳戶交易明細」PDF 轉出的 CSV（網銀原生匯出檔還沒驗過）",
+  "count": 4,
+  "skipped": 0,
+  "balanceBreaks": [],
+  "txns": [
+    { "line": 2, "txnDate": "2026-09-01", "actualDate": null, "txnTime": null, "withdrawMinor": 150000, "depositMinor": 0, "balanceMinor": 9850000, "counterparty": "0000000000000000" },
+    { "line": 3, "txnDate": "2026-09-02", "actualDate": null, "txnTime": null, "withdrawMinor": 0, "depositMinor": 200000, "balanceMinor": 10050000, "counterparty": "0000000000000000" },
+    { "line": 4, "txnDate": "2026-09-05", "actualDate": null, "txnTime": null, "withdrawMinor": 500000, "depositMinor": 0, "balanceMinor": 9550000, "counterparty": "0000001234567890" },
+    { "line": 5, "txnDate": "2026-09-05", "actualDate": null, "txnTime": null, "withdrawMinor": 1500, "depositMinor": 0, "balanceMinor": 9548500, "counterparty": "0000000000000000" }
+  ]
+}

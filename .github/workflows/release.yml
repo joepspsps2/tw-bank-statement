@@ -1,0 +1,24 @@
+# 發布到 npm：在 GitHub 建一個 Release 時觸發，但會停在「npm」這個環境，等老喬本人按「Approve」才真的發布。
+# 不放任何 npm 密碼：npm 那邊設定「信任這個 repo 的這支流程」（Trusted Publishing），由 GitHub 臨時證明身分。
+name: 發布到 npm
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install -g npm@11.6.2
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm publish --provenance --access public

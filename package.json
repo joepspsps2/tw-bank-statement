@@ -1,0 +1,54 @@
+{
+  "name": "@joelincc/tw-bank-statement",
+  "version": "0.1.0",
+  "description": "讀台灣網銀匯出的交易明細（CSV、Big5、Excel .xlsx、網頁表格 .xls），整理成統一格式：民國年、Excel 日期序號、金額轉整數「分」、餘額連續檢查。Parse Taiwanese online-banking statement exports.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "test": "node --test --experimental-strip-types tests/*.test.ts && node scripts/pii-scan.mjs",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "keywords": [
+    "taiwan",
+    "bank-statement",
+    "csv",
+    "xlsx",
+    "big5",
+    "roc-date",
+    "民國",
+    "網銀",
+    "對帳單",
+    "交易明細"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joepspsps2/tw-bank-statement.git"
+  },
+  "homepage": "https://github.com/joepspsps2/tw-bank-statement#readme",
+  "bugs": "https://github.com/joepspsps2/tw-bank-statement/issues",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3"
+  }
+}
