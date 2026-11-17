@@ -54,6 +54,6 @@
     "typescript": "5.9.3"
   },
   "dependencies": {
-    "@joelincc/tw-roc-date": "0.1.1"
+    "@joelincc/tw-roc-date": "0.1.2"
   }
 }
