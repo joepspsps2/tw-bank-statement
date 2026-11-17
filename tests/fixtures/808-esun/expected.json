@@ -1,0 +1,13 @@
+{
+  "bank": "808",
+  "note": "假資料；格式照玉山網銀匯出的存款交易明細 CSV（UTF-8 BOM、CRLF、每格加引號）",
+  "count": 4,
+  "skipped": 0,
+  "balanceBreaks": [],
+  "txns": [
+    { "line": 2, "txnDate": "2026-01-05", "actualDate": "2026-01-03", "txnTime": "02:11:00", "withdrawMinor": 0, "depositMinor": 1200, "balanceMinor": 1001200, "counterparty": null },
+    { "line": 3, "txnDate": "2026-01-06", "actualDate": null, "txnTime": "10:20:00", "withdrawMinor": 0, "depositMinor": 150000, "balanceMinor": 1151200, "counterparty": "822/0000000000000000" },
+    { "line": 4, "txnDate": "2026-01-12", "actualDate": null, "txnTime": "05:18:54", "withdrawMinor": 300000, "depositMinor": 0, "balanceMinor": 851200, "counterparty": "017/0000001234567890" },
+    { "line": 5, "txnDate": "2026-01-15", "actualDate": null, "txnTime": "09:00:00", "withdrawMinor": 123400, "depositMinor": 0, "balanceMinor": 727800, "counterparty": null }
+  ]
+}

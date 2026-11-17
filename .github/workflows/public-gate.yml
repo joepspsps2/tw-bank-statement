@@ -1,0 +1,39 @@
+# public-gate v0.2.0 ── 門 1（進門）：測試＋清潔掃描。正本在擁有者的私有工具庫，勿在公開 repo 手改。
+# 每個 push 到 main、每個 PR 都跑；main 的保護規則把這兩個 job（clean-scan、test）設成必過。
+# 只用 pull_request（不是 pull_request_target）：這裡會執行 PR 帶來的程式，所以權限唯讀、不給任何 secret。
+name: public-gate 檢查
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  clean-scan:
+    name: clean-scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 清潔掃描（repo 全部追蹤檔）
+        run: node .public-gate/clean-scan.mjs
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run typecheck --if-present
+      - run: npm run build --if-present
+      - name: 清潔掃描（實際會發到 npm 的包）
+        run: node .public-gate/clean-scan.mjs --pack

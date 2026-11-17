@@ -1,0 +1,13 @@
+{
+  "說明": "public-gate 各 repo 設定（本檔各 repo 自己維護，產生器不會覆蓋）。exclude＝不掃的路徑；allow＝確定是假資料的值→原因（鑰匙放行不了）；denyExemptFiles＝擁有者私有端的名單比對要跳過哪些檔（只限著作權署名這類刻意公開的身分，要寫原因；鑰匙與個資照掃）；publicEmails＝可以公開的信箱；extraPatterns＝本 repo 另外要擋的樣式 {name, regex, flags}；sensitivePaths＝外部 PR 動到就等擁有者的路徑（另外內建 .github/、.public-gate/、package.json、lockfile、tsconfig*.json、.npmrc、.nvmrc、.npmignore）。",
+  "exclude": [],
+  "allow": {
+    "10050000": "測試樣本的假餘額（金額，單位是分；tests/fixtures/013-cathay/expected.json），不是帳號"
+  },
+  "denyExemptFiles": {
+    "LICENSE": "著作權人署名＝刻意公開的品牌網域（2026-11-12 首次公開時定，D397），不是外洩"
+  },
+  "publicEmails": [],
+  "extraPatterns": [],
+  "sensitivePaths": []
+}

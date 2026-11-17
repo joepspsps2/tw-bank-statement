@@ -1,0 +1,34 @@
+# public-gate v0.2.0 ── 門 2（出門）：發布到 npm。正本在擁有者的私有工具庫。
+# 在 GitHub 建 Release（標籤 v＋package.json 版號）時觸發，停在「npm」環境等擁有者本人按 Approve 才發布。
+# 不放 npm 密碼：npm 端設定信任這支流程（Trusted Publishing），由 GitHub 臨時證明身分＋provenance。
+# 發布前對「實際要發出去的包」再跑一次清潔掃描——repo 乾淨不代表包乾淨。
+name: 發布到 npm
+on:
+  release:
+    types: [published]
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+      - name: 標籤必須是 v＋package.json 版號
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: node -e "const v='v'+require('./package.json').version; if (process.env.TAG !== v) { console.error('標籤 '+process.env.TAG+' 跟版號 '+v+' 不符，不發布'); process.exit(1) }"
+      - run: npm install -g npm@11.6.2
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run build --if-present
+      - name: 清潔掃描（實際會發到 npm 的包）
+        run: node .public-gate/clean-scan.mjs --pack
+      - run: npm publish --provenance --access public
