@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// public-gate clean-scan v0.2.0
+// public-gate clean-scan v0.3.0
 // 正本在擁有者的私有工具庫（public-gate）；本檔由 new-public-repo.mjs 複製進各公開 repo，勿在公開 repo 手改，
 // 要改請改正本再重新套用（巡店程式會比對版本有沒有落後）。
 //
