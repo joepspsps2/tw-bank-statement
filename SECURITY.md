@@ -8,4 +8,4 @@
 - Releases are published to npm only through GitHub Actions with provenance (Trusted Publishing);
   no npm token exists for this package. 發布只經 GitHub Actions（附 provenance），本套件沒有 npm 鑰匙。
 
-<!-- public-gate v0.2.0 -->
+<!-- public-gate v0.3.0 -->

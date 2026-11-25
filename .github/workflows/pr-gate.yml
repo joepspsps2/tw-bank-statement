@@ -1,4 +1,4 @@
-# public-gate v0.2.0 ── 門 1（進門）：外人的 PR 動到敏感檔就等擁有者：對最新 commit 按 Approve，再重跑這一格（或貼 owner-approved 觸發）。正本在擁有者的私有工具庫。
+# public-gate v0.3.0 ── 門 1（進門）：外人的 PR 動到敏感檔就等擁有者：對最新 commit 按 Approve，再重跑這一格（或貼 owner-approved 觸發）。正本在擁有者的私有工具庫。
 # 🔴 這支刻意用 pull_request_target：規則要從「我們的 main」讀，不能讓 PR 自己帶來的版本說了算。
 #    安全前提（不得改）：只 checkout 我們的 main（不指定 ref）、絕不 checkout 或執行 PR 的程式、
 #    不給任何 secret；PR 動了哪些檔用 GitHub API 問。權限只有讀內容＋貼標籤。
@@ -19,10 +19,10 @@ jobs:
     name: pr-gate
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
       - run: node .public-gate/pr-gate.mjs

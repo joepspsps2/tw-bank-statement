@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// public-gate pr-gate v0.2.0
+// public-gate pr-gate v0.3.0
 // 正本在擁有者的私有工具庫（public-gate）；勿在公開 repo 手改。
 //
 // 進門檢查（外人的 PR 動到敏感檔就等擁有者）：

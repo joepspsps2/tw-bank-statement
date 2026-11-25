@@ -1,4 +1,4 @@
-# public-gate v0.2.0 ── 門 2（出門）：發布到 npm。正本在擁有者的私有工具庫。
+# public-gate v0.3.0 ── 門 2（出門）：發布到 npm。正本在擁有者的私有工具庫。
 # 在 GitHub 建 Release（標籤 v＋package.json 版號）時觸發，停在「npm」環境等擁有者本人按 Approve 才發布。
 # 不放 npm 密碼：npm 端設定信任這支流程（Trusted Publishing），由 GitHub 臨時證明身分＋provenance。
 # 發布前對「實際要發出去的包」再跑一次清潔掃描——repo 乾淨不代表包乾淨。
@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
